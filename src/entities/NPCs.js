@@ -3,7 +3,7 @@ import { sounds } from '../audio/SoundEffects.js';
 
 // Base NPC class with stylized arms and animated limbs
 export class BaseNPC {
-    constructor(scene, name, shirtColor, startPos) {
+    constructor(scene, name, shirtColor, startPos, faceTexturePath = null) {
         this.scene = scene;
         this.name = name;
         this.position = startPos.clone();
@@ -14,16 +14,25 @@ export class BaseNPC {
         this.fallTimer = 0;
         this.mesh = new THREE.Group();
 
-        this.initMesh(shirtColor);
+        this.initMesh(shirtColor, faceTexturePath);
         this.scene.add(this.mesh);
     }
 
-    initMesh(shirtColor) {
+    initMesh(shirtColor, faceTexturePath) {
         // Head
         const headGeo = new THREE.BoxGeometry(0.34, 0.36, 0.32);
         const skinMat = new THREE.MeshStandardMaterial({ color: 0xedc2a4, roughness: 0.6 });
         const hairMat = new THREE.MeshStandardMaterial({ color: 0x332211, roughness: 0.9 });
-        const headMaterials = [skinMat, skinMat, hairMat, skinMat, skinMat, hairMat];
+        
+        let faceMat = skinMat;
+        if (faceTexturePath) {
+            const loader = new THREE.TextureLoader();
+            const faceTex = loader.load(faceTexturePath);
+            faceMat = new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.5 });
+        }
+
+        // Box faces: [Right, Left, Top, Bottom, Front (+Z), Back]
+        const headMaterials = [skinMat, skinMat, hairMat, skinMat, faceMat, hairMat];
 
         this.head = new THREE.Mesh(headGeo, headMaterials);
         this.head.position.y = 1.55;
@@ -210,7 +219,7 @@ export class FernanNPC extends BaseNPC {
 // 2. Alejandro: Always Laughing!
 export class AlejandroNPC extends BaseNPC {
     constructor(scene, startPos, particles) {
-        super(scene, 'Alejandro 😂', 0xcc7722, startPos); // Orange polo
+        super(scene, 'Alejandro 😂', 0xcc7722, startPos, '/assets/alejandro_face.png'); // Standing face from caras.jpeg
         this.particles = particles;
         this.laughCooldown = 2.5 + Math.random() * 3.0;
         this.laughingTimer = 0;
@@ -265,7 +274,7 @@ export class AlejandroNPC extends BaseNPC {
 // 3. Hector: Tactical Coworker
 export class HectorNPC extends BaseNPC {
     constructor(scene, startPos) {
-        super(scene, 'Hector ⚡', 0x228844, startPos); // Green polo
+        super(scene, 'Hector ⚡', 0x228844, startPos, '/assets/hector_face.png'); // Seated face from caras.jpeg
         this.speed = 4.6;
     }
 
