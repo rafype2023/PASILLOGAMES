@@ -125,6 +125,7 @@ export class LoungeRaceLevel {
                 sounds.playBoost();
                 // Direct NPCs toward the lounge buffet
                 this.fernan.setDestination(this.finishTarget);
+                this.fernan.fallCooldown = 2.0; // Trips 2 seconds into the sprint!
                 this.alejandro.setDestination(this.finishTarget);
                 this.hector.setDestination(this.finishTarget);
             }

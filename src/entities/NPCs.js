@@ -101,36 +101,77 @@ export class BaseNPC {
     }
 }
 
-// 1. Fernan: Always Falling!
+// 1. Fernan: Always Falling! (El que siempre se cae)
 export class FernanNPC extends BaseNPC {
     constructor(scene, startPos, particles) {
         super(scene, 'Fernan 😵', 0x2e6b9e, startPos); // Blue polo
         this.particles = particles;
-        this.fallCooldown = 3.5 + Math.random() * 3.5;
+        this.fallCooldown = 2.0; // Trips after 2 seconds in Level 2!
         this.isDown = false;
+        this.isStumbling = false;
+        this.stumbleTimer = 0;
+        this.fallTimer = 0;
+        this.facingAngle = 0;
     }
 
     update(delta, camera) {
         super.update(delta, camera);
 
+        // 1. If currently lying on the floor
         if (this.isDown) {
             this.fallTimer -= delta;
+
+            // Comedic leg kicks while trying to get up from the floor
+            const kick = Math.sin(Date.now() * 0.025) * 0.6;
+            this.leftLeg.rotation.x = kick;
+            this.rightLeg.rotation.x = -kick;
+            this.leftArm.rotation.z = Math.PI / 2.5;
+            this.rightArm.rotation.z = -Math.PI / 2.5;
+
+            // Keep body flat on floor surface (y = 0.22m)
+            this.mesh.position.set(this.position.x, 0.22, this.position.z);
+            this.mesh.rotation.x = -Math.PI / 2;
+
             if (this.fallTimer <= 0) {
-                // Recover from floor
+                // Recover and stand back up!
                 this.isDown = false;
                 this.mesh.rotation.x = 0;
                 this.mesh.position.y = 0;
-                this.fallCooldown = 4.0 + Math.random() * 5.0;
+                this.leftArm.rotation.z = 0;
+                this.rightArm.rotation.z = 0;
+                this.leftLeg.rotation.x = 0;
+                this.rightLeg.rotation.x = 0;
+                this.fallCooldown = 3.2 + Math.random() * 2.5; // Falls again soon!
             }
             return;
         }
 
-        this.fallCooldown -= delta;
-        if (this.fallCooldown <= 0) {
-            this.tripAndFall();
+        // 2. If currently in stumbling / losing balance phase
+        if (this.isStumbling) {
+            this.stumbleTimer -= delta;
+
+            // Wild wobble and arm flailing
+            this.mesh.rotation.z = Math.sin(Date.now() * 0.035) * 0.45;
+            this.leftArm.rotation.x = Math.sin(Date.now() * 0.04) * 1.5;
+            this.rightArm.rotation.x = -Math.sin(Date.now() * 0.04) * 1.5;
+
+            if (this.stumbleTimer <= 0) {
+                this.isStumbling = false;
+                this.mesh.rotation.z = 0;
+                this.tripAndFall();
+            }
             return;
         }
 
+        // 3. Fall Cooldown countdown
+        this.fallCooldown -= delta;
+        if (this.fallCooldown <= 0) {
+            this.isStumbling = true;
+            this.stumbleTimer = 0.55; // 0.55s stumble animation before crash
+            return;
+        }
+
+        // 4. Regular Running Movement toward destination
         if (this.targetPos) {
             const dir = this.targetPos.clone().sub(this.position);
             dir.y = 0;
@@ -139,9 +180,10 @@ export class FernanNPC extends BaseNPC {
                 dir.normalize();
                 this.position.addScaledVector(dir, this.speed * delta);
                 this.mesh.position.copy(this.position);
-                this.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+                this.facingAngle = Math.atan2(dir.x, dir.z);
+                this.mesh.rotation.y = this.facingAngle;
 
-                const swing = Math.sin(Date.now() * 0.01) * 0.5;
+                const swing = Math.sin(Date.now() * 0.014) * 0.6;
                 this.leftLeg.rotation.x = swing;
                 this.rightLeg.rotation.x = -swing;
                 this.leftArm.rotation.x = -swing;
@@ -152,11 +194,12 @@ export class FernanNPC extends BaseNPC {
 
     tripAndFall() {
         this.isDown = true;
-        this.fallTimer = 2.2;
+        this.fallTimer = 2.0;
         sounds.playFernanFall();
 
-        this.mesh.rotation.x = Math.PI / 2;
-        this.mesh.position.y = -0.3;
+        // Lie flat forward on top of the floor
+        this.mesh.rotation.x = -Math.PI / 2;
+        this.mesh.position.set(this.position.x, 0.22, this.position.z);
 
         if (this.particles) {
             this.particles.createStumbleStars(this.position);

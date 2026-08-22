@@ -100,29 +100,63 @@ export class ParticleSystem {
     }
 
     createStumbleStars(position) {
-        for (let i = 0; i < 5; i++) {
+        // Speech Bubble: ¡ME CAÍ! 😵
+        const textCanvas = document.createElement('canvas');
+        textCanvas.width = 192;
+        textCanvas.height = 64;
+        const tCtx = textCanvas.getContext('2d');
+        tCtx.fillStyle = '#ff4444';
+        tCtx.fillRect(0, 0, 192, 64);
+        tCtx.fillStyle = '#ffffff';
+        tCtx.font = 'bold 24px sans-serif';
+        tCtx.textAlign = 'center';
+        tCtx.fillText('¡ME CAÍ! 😵', 96, 42);
+
+        const textTex = new THREE.CanvasTexture(textCanvas);
+        const textMat = new THREE.MeshBasicMaterial({ map: textTex, transparent: true, side: THREE.DoubleSide });
+        const textMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.4), textMat);
+        textMesh.position.copy(position).add(new THREE.Vector3(0, 1.2, 0));
+        this.scene.add(textMesh);
+
+        this.activeParticles.push({
+            mesh: textMesh,
+            velocity: new THREE.Vector3(0, 0.7, 0),
+            life: 1.0,
+            decay: 0.45,
+            isBillboard: true
+        });
+
+        // Dizzy Stars around head
+        const starIcons = ['💫', '⭐', '✨', '💥'];
+        for (let i = 0; i < 6; i++) {
             const canvas = document.createElement('canvas');
             canvas.width = 64;
             canvas.height = 64;
             const ctx = canvas.getContext('2d');
-            ctx.font = '32px sans-serif';
-            ctx.fillText('💫', 12, 44);
+            ctx.font = '36px sans-serif';
+            ctx.fillText(starIcons[i % starIcons.length], 10, 48);
 
             const tex = new THREE.CanvasTexture(canvas);
-            const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
-            const mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.35), mat);
+            const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide });
+            const mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), mat);
+
+            const angle = (i / 6) * Math.PI * 2;
             mesh.position.copy(position).add(new THREE.Vector3(
-                (Math.random() - 0.5) * 0.5,
-                0.3 + Math.random() * 0.4,
-                (Math.random() - 0.5) * 0.5
+                Math.cos(angle) * 0.6,
+                0.6 + Math.random() * 0.5,
+                Math.sin(angle) * 0.6
             ));
 
             this.scene.add(mesh);
             this.activeParticles.push({
                 mesh,
-                velocity: new THREE.Vector3((Math.random() - 0.5) * 0.4, 0.5, (Math.random() - 0.5) * 0.4),
+                velocity: new THREE.Vector3(
+                    Math.cos(angle) * 0.4,
+                    0.5 + Math.random() * 0.4,
+                    Math.sin(angle) * 0.4
+                ),
                 life: 1.0,
-                decay: 0.8,
+                decay: 0.4,
                 isBillboard: true
             });
         }
