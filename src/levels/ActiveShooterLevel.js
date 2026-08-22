@@ -244,16 +244,18 @@ export class ActiveShooterLevel {
             npc.update(delta, camera);
         });
 
-        // 4. Check for Emergency Exit Stairwell Escapes
-        for (const exit of this.floorPlan.exits) {
-            const dist = exit.pos.distanceTo(this.player.position);
-            if (dist < 2.5) {
-                // ESCAPED TO SAFETY!
-                this.isComplete = true;
-                sounds.stopSiren();
-                sounds.playVictory();
-                this.particles.createConfetti(this.player.position);
-                break;
+        // 4. Check for Emergency Exit Stairwell Escapes (Must have rescued colleagues)
+        if (this.rescuedColleagues >= 1) {
+            for (const exit of this.floorPlan.exits) {
+                const dist = exit.pos.distanceTo(this.player.position);
+                if (dist < 2.0) {
+                    // ESCAPED TO SAFETY!
+                    this.isComplete = true;
+                    sounds.stopSiren();
+                    sounds.playVictory();
+                    this.particles.createConfetti(this.player.position);
+                    break;
+                }
             }
         }
 

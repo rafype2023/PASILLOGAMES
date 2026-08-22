@@ -19,6 +19,8 @@ export class LoungeRaceLevel {
         this.raceTime = 0;
         this.countdown = 3.0;
         this.raceStarted = false;
+        this.finishedOrder = 0;
+        this.leaderboard = [];
     }
 
     start() {
@@ -28,36 +30,39 @@ export class LoungeRaceLevel {
         this.raceStarted = false;
         this.countdown = 3.0;
         this.raceTime = 0;
+        this.finishedOrder = 0;
+        this.rank = 1;
+        this.leaderboard = [];
 
-        // Spawn player at Start line in West wing
+        // 1. Spawn player at Start line in West wing corridor
         const startLine = new THREE.Vector3(-24, 0, 0);
         this.player.spawn(startLine);
         this.player.stamina = 100;
 
-        // Spawn Racer NPCs side-by-side
+        // 2. Spawn Racer NPCs side-by-side with balanced competitive speeds
         this.fernan = new FernanNPC(this.scene, new THREE.Vector3(-24, 0, 3), this.particles);
-        this.fernan.speed = 4.2;
+        this.fernan.speed = 3.8; // Fernan falls periodically
         this.npcs.push(this.fernan);
 
         this.alejandro = new AlejandroNPC(this.scene, new THREE.Vector3(-24, 0, -3), this.particles);
-        this.alejandro.speed = 4.4;
+        this.alejandro.speed = 4.2; // Alejandro laughs
         this.npcs.push(this.alejandro);
 
         this.hector = new HectorNPC(this.scene, new THREE.Vector3(-24, 0, -6));
-        this.hector.speed = 4.8;
+        this.hector.speed = 4.6; // Hector is fast
         this.npcs.push(this.hector);
 
         this.racers = [
-            { name: 'Guillo (Tú)', entity: this.player, isPlayer: true, finished: false, time: 0 },
-            { name: 'Hector ⚡', entity: this.hector, isPlayer: false, finished: false, time: 0 },
-            { name: 'Alejandro 😂', entity: this.alejandro, isPlayer: false, finished: false, time: 0 },
-            { name: 'Fernan 😵', entity: this.fernan, isPlayer: false, finished: false, time: 0 }
+            { name: 'Guillo (Tú)', entity: this.player, isPlayer: true, finished: false, finishPlace: 0, finishTime: 0 },
+            { name: 'Hector ⚡', entity: this.hector, isPlayer: false, finished: false, finishPlace: 0, finishTime: 0 },
+            { name: 'Alejandro 😂', entity: this.alejandro, isPlayer: false, finished: false, finishPlace: 0, finishTime: 0 },
+            { name: 'Fernan 😵', entity: this.fernan, isPlayer: false, finished: false, finishPlace: 0, finishTime: 0 }
         ];
 
-        // Spawn Turbo Coffee Cups along the hallway
+        // 3. Spawn Turbo Coffee Cups along the hallway
         this.spawnCoffee();
 
-        // Create Finish Banner at Lounge Buffet Table
+        // 4. Create Finish Banner at Lounge Buffet Table
         this.createFinishBanner();
     }
 
@@ -82,7 +87,7 @@ export class LoungeRaceLevel {
 
         // Glowing finish ring
         const ring = new THREE.Mesh(
-            new THREE.RingGeometry(1.5, 2.0, 32),
+            new THREE.RingGeometry(1.5, 2.2, 32),
             new THREE.MeshBasicMaterial({ color: 0xffbb00, side: THREE.DoubleSide })
         );
         ring.rotation.x = -Math.PI / 2;
@@ -97,9 +102,9 @@ export class LoungeRaceLevel {
         ctx.fillStyle = '#ff8800';
         ctx.fillRect(0, 0, 256, 64);
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 26px sans-serif';
+        ctx.font = 'bold 24px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('🏆 LOUNGE BUFFET!', 128, 42);
+        ctx.fillText('🏆 LOUNGE BUFFET!', 128, 40);
 
         const tex = new THREE.CanvasTexture(canvas);
         const banner = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.6), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
@@ -112,9 +117,7 @@ export class LoungeRaceLevel {
     }
 
     update(delta, camera) {
-        if (this.isComplete) return;
-
-        // Countdown handling
+        // Countdown handling before start
         if (!this.raceStarted) {
             this.countdown -= delta;
             if (this.countdown <= 0) {
@@ -128,7 +131,9 @@ export class LoungeRaceLevel {
             return;
         }
 
-        this.raceTime += delta;
+        if (!this.isComplete && !this.isFailed) {
+            this.raceTime += delta;
+        }
 
         // Update NPCs
         this.npcs.forEach(npc => npc.update(delta, camera));
@@ -141,7 +146,7 @@ export class LoungeRaceLevel {
             const dist = c.pos.distanceTo(this.player.position);
             if (dist < 1.2) {
                 // Turbo Coffee Boost!
-                this.player.boostTimer = 4.0;
+                this.player.boostTimer = 4.5;
                 this.player.stamina = Math.min(100, this.player.stamina + 40);
                 sounds.playBoost();
                 this.scene.remove(c.mesh);
@@ -149,27 +154,51 @@ export class LoungeRaceLevel {
             }
         }
 
-        // Check who crossed finish line
+        // Check each racer crossing finish line
         this.racers.forEach(r => {
             if (!r.finished) {
                 const dist = r.entity.position.distanceTo(this.finishTarget);
-                if (dist < 2.2) {
+                if (dist < 2.4) {
+                    this.finishedOrder++;
                     r.finished = true;
-                    r.time = this.raceTime;
+                    r.finishPlace = this.finishedOrder;
+                    r.finishTime = this.raceTime;
                 }
             }
         });
 
-        // Check if player reached lounge
-        const playerFinished = this.racers.find(r => r.isPlayer)?.finished;
-        if (playerFinished && !this.isComplete) {
+        // Calculate real-time live ranking for all 4 racers
+        const sorted = this.racers.slice().sort((a, b) => {
+            if (a.finished && b.finished) {
+                return a.finishPlace - b.finishPlace;
+            }
+            if (a.finished) return -1;
+            if (b.finished) return 1;
+
+            const distA = a.entity.position.distanceTo(this.finishTarget);
+            const distB = b.entity.position.distanceTo(this.finishTarget);
+            return distA - distB;
+        });
+
+        const playerRankIndex = sorted.findIndex(r => r.isPlayer);
+        this.rank = playerRankIndex + 1;
+        this.leaderboard = sorted;
+
+        // Check if player crossed finish line
+        const playerRacer = this.racers.find(r => r.isPlayer);
+        if (playerRacer && playerRacer.finished && !this.isComplete && !this.isFailed) {
+            this.rank = playerRacer.finishPlace;
             this.isComplete = true;
-            // Determine player rank
-            const finishedRacers = this.racers.filter(r => r.finished);
-            this.rank = finishedRacers.length;
             sounds.playVictory();
             this.particles.createConfetti(this.player.position);
         }
+    }
+
+    getRankMedal(r) {
+        if (r === 1) return '🥇';
+        if (r === 2) return '🥈';
+        if (r === 3) return '🥉';
+        return '🏃';
     }
 
     cleanup() {

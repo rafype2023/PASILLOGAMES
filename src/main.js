@@ -264,6 +264,11 @@ export class Game {
     }
 
     nextLevel() {
+        if (this.currentLevel) {
+            this.currentLevel.cleanup();
+            this.currentLevel = null;
+        }
+        document.getElementById('game-hud').style.display = 'none';
         const nextIdx = (this.currentLevelIndex + 1) % this.levels.length;
         this.hud.hideModal();
         this.showLevelIntroScreen(nextIdx);
@@ -272,6 +277,7 @@ export class Game {
     showMenu() {
         if (this.currentLevel) {
             this.currentLevel.cleanup();
+            this.currentLevel = null;
         }
         document.getElementById('game-hud').style.display = 'none';
         document.getElementById('level-intro-modal').style.display = 'none';

@@ -6,6 +6,7 @@ export class HUD {
         this.minimapCanvas = document.getElementById('minimap');
         this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null;
         this.missionTime = 15 * 60; // 15:00 countdown timer
+        this.modalActive = false;
 
         this.initEventListeners();
     }
@@ -25,14 +26,17 @@ export class HUD {
         });
 
         document.getElementById('btn-restart')?.addEventListener('click', () => {
+            this.hideModal();
             this.game.restartLevel();
         });
 
         document.getElementById('btn-next-level')?.addEventListener('click', () => {
+            this.hideModal();
             this.game.nextLevel();
         });
 
         document.getElementById('btn-menu')?.addEventListener('click', () => {
+            this.hideModal();
             this.game.showMenu();
         });
     }
@@ -48,7 +52,7 @@ export class HUD {
     }
 
     update(levelIndex, currentLevel, player) {
-        if (!player) return;
+        if (!player || !currentLevel) return;
 
         // Level tag
         const levelTag = document.getElementById('hud-level-tag');
@@ -56,7 +60,7 @@ export class HUD {
 
         // Timer update
         const timerEl = document.getElementById('hud-timer-val');
-        if (timerEl) {
+        if (timerEl && levelIndex !== 0) {
             const mins = Math.floor(this.missionTime / 60);
             const secs = Math.floor(this.missionTime % 60);
             timerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -99,8 +103,14 @@ export class HUD {
             if (staminaLabel) staminaLabel.innerText = (player.boostTimer > 0) ? 'TURBO BOOST' : 'STAMINA';
             if (staminaVal) staminaVal.innerText = `${stam}%`;
 
-            if (chaosLabel) chaosLabel.innerText = `CARRERA ACTIVA`;
-            if (statusSub) statusSub.innerText = `TIEMPO: ${(currentLevel.raceTime || 0).toFixed(1)}s`;
+            if (!currentLevel.raceStarted) {
+                if (chaosLabel) chaosLabel.innerText = `SALIDA EN ${Math.ceil(currentLevel.countdown)}s`;
+                if (statusSub) statusSub.innerText = `¡PREPÁRATE PARA CORRER AL BUFFET!`;
+            } else {
+                const medal = currentLevel.getRankMedal ? currentLevel.getRankMedal(currentLevel.rank) : '🥇';
+                if (chaosLabel) chaosLabel.innerText = `${medal} POSICIÓN: ${currentLevel.rank}º / 4`;
+                if (statusSub) statusSub.innerText = `TIEMPO: ${(currentLevel.raceTime || 0).toFixed(1)}s | META: BREAKROOM LOUNGE`;
+            }
         } else if (levelIndex === 2) { // Active Shooter Evacuation (Archer Threat)
             const hp = Math.max(0, Math.round(player.health));
             const stam = Math.max(0, Math.round(player.stamina));
@@ -235,31 +245,81 @@ export class HUD {
         ctx.stroke();
     }
 
-    showVictory(title, message, score) {
+    showVictory(levelIndex, currentLevel) {
+        if (this.modalActive) return;
+        this.modalActive = true;
+
         const modal = document.getElementById('modal-gameover');
-        if (modal) {
-            modal.style.display = 'flex';
-            document.getElementById('modal-title').innerText = `🎉 ${title}`;
-            document.getElementById('modal-title').style.color = '#e6be6d';
-            document.getElementById('modal-message').innerText = message;
-            document.getElementById('modal-score').innerText = score ? `Score / Time: ${score}` : '';
-            document.getElementById('btn-next-level').style.display = 'inline-block';
+        if (!modal) return;
+
+        let title = '¡Misión Cumplida!';
+        let message = 'Has completado el objetivo con éxito.';
+        let score = '';
+
+        if (levelIndex === 0) {
+            title = '¡Llegaste a la Estación Segura!';
+            message = 'Guillo logró descontaminarse y esquivar a los infectados de COVID-19.';
+            score = `Infección: ${Math.round(this.game.player.infection)}% | ¡Zona Segura Alcanzada!`;
+        } else if (levelIndex === 1) {
+            const rank = currentLevel.rank || 1;
+            const medal = currentLevel.getRankMedal ? currentLevel.getRankMedal(rank) : '🥇';
+            title = `${medal} ¡${rank}º Lugar en el Buffet!`;
+            message = `Guillo cruzó la meta del Lounge en ${currentLevel.raceTime.toFixed(1)} segundos.`;
+
+            if (currentLevel.leaderboard && currentLevel.leaderboard.length > 0) {
+                const rankingText = currentLevel.leaderboard.map((r, i) => {
+                    const place = i + 1;
+                    const m = place === 1 ? '🥇' : (place === 2 ? '🥈' : (place === 3 ? '🥉' : '🏃'));
+                    const timeStr = r.finishTime ? `${r.finishTime.toFixed(1)}s` : 'En carrera';
+                    return `${m} ${place}º ${r.name} (${timeStr})`;
+                }).join('<br>');
+                score = `<div style="text-align: left; background: rgba(0,0,0,0.5); padding: 0.8rem; border-radius: 8px; margin-top: 0.5rem; line-height: 1.6;">${rankingText}</div>`;
+            }
+        } else if (levelIndex === 2) {
+            title = '¡Evacuación Exitosa!';
+            message = 'Guillo esquivó los flechazos, rescató a sus compañeros y escapó por las escaleras de emergencia.';
+            score = `Compañeros Rescatados: ${currentLevel.rescuedColleagues || 3}/3 | Escaleras Despejadas`;
         }
+
+        modal.style.display = 'flex';
+        document.getElementById('modal-title').innerHTML = `🎉 ${title}`;
+        document.getElementById('modal-title').style.color = '#e6be6d';
+        document.getElementById('modal-message').innerHTML = message;
+        document.getElementById('modal-score').innerHTML = score;
+        document.getElementById('btn-next-level').style.display = 'inline-block';
     }
 
-    showDefeat(title, message) {
+    showGameOver(levelIndex, currentLevel) {
+        if (this.modalActive) return;
+        this.modalActive = true;
+
         const modal = document.getElementById('modal-gameover');
-        if (modal) {
-            modal.style.display = 'flex';
-            document.getElementById('modal-title').innerText = `💥 ${title}`;
-            document.getElementById('modal-title').style.color = '#e8637c';
-            document.getElementById('modal-message').innerText = message;
-            document.getElementById('modal-score').innerText = '';
-            document.getElementById('btn-next-level').style.display = 'none';
+        if (!modal) return;
+
+        let title = '¡Misión Fallida!';
+        let message = 'No lograste completar el objetivo.';
+
+        if (levelIndex === 0) {
+            title = '¡Infectado por COVID-19!';
+            message = 'Los estornudos sobrepasaron a Guillo y agotaron su resistencia.';
+        } else if (levelIndex === 1) {
+            title = '¡Te quedaste sin snacks!';
+            message = 'No lograste llegar a tiempo al buffet del breakroom.';
+        } else if (levelIndex === 2) {
+            title = '¡Alcanzado por los Flechazos!';
+            message = 'Guillo recibió 4 flechazos y no pudo llegar a las escaleras de evacuación.';
         }
+
+        modal.style.display = 'flex';
+        document.getElementById('modal-title').innerHTML = `💥 ${title}`;
+        document.getElementById('modal-title').style.color = '#e8637c';
+        document.getElementById('modal-message').innerHTML = message;
+        document.getElementById('modal-score').innerHTML = '';
+        document.getElementById('btn-next-level').style.display = 'none';
     }
 
     hideModal() {
+        this.modalActive = false;
         const modal = document.getElementById('modal-gameover');
         if (modal) modal.style.display = 'none';
     }
