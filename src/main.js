@@ -12,11 +12,13 @@ export class Game {
     constructor() {
         this.container = document.getElementById('game-container');
         this.currentLevelIndex = 0;
+        this.selectedPendingLevel = 0;
         this.clock = new THREE.Clock();
 
         this.initThree();
         this.initScene();
         this.initUI();
+        this.initIntroVideo();
     }
 
     initThree() {
@@ -94,14 +96,131 @@ export class Game {
         requestAnimationFrame(this.animate);
     }
 
+    initIntroVideo() {
+        const videoOverlay = document.getElementById('intro-video-overlay');
+        const video = document.getElementById('intro-video');
+        const btnSkip = document.getElementById('btn-skip-intro');
+        const btnAudio = document.getElementById('btn-video-audio');
+        const btnWatchIntro = document.getElementById('btn-watch-intro');
+        const videoPrompt = document.getElementById('video-prompt');
+
+        if (!videoOverlay || !video) return;
+
+        const endIntro = () => {
+            video.pause();
+            videoOverlay.style.opacity = '0';
+            setTimeout(() => {
+                videoOverlay.style.display = 'none';
+                document.getElementById('main-menu').style.display = 'flex';
+            }, 400);
+        };
+
+        const playVideo = () => {
+            sounds.init();
+            video.play().then(() => {
+                if (videoPrompt) videoPrompt.style.display = 'none';
+            }).catch(() => {
+                // Autoplay blocked, wait for user click
+                if (videoPrompt) videoPrompt.style.display = 'block';
+            });
+        };
+
+        videoOverlay.addEventListener('click', (e) => {
+            if (e.target !== btnSkip && e.target !== btnAudio) {
+                playVideo();
+            }
+        });
+
+        btnSkip?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            endIntro();
+        });
+
+        btnAudio?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            video.muted = !video.muted;
+            btnAudio.innerText = video.muted ? '🔇 Activar Audio' : '🔊 Audio Activado';
+        });
+
+        video.addEventListener('ended', endIntro);
+
+        btnWatchIntro?.addEventListener('click', () => {
+            document.getElementById('main-menu').style.display = 'none';
+            videoOverlay.style.display = 'flex';
+            videoOverlay.style.opacity = '1';
+            video.currentTime = 0;
+            video.muted = false;
+            if (btnAudio) btnAudio.innerText = '🔊 Audio Activado';
+            video.play();
+        });
+
+        // Initial attempt to play
+        playVideo();
+    }
+
     initUI() {
-        // Level selection cards
+        // Level selection cards -> Opens Level Intro Screen Briefing Modal
         document.querySelectorAll('.level-card').forEach(card => {
-            card.addEventListener('click', (e) => {
+            card.addEventListener('click', () => {
                 const lvl = parseInt(card.getAttribute('data-level'), 10);
-                this.startLevel(lvl);
+                this.showLevelIntroScreen(lvl);
             });
         });
+
+        // Level Intro Modal buttons
+        const btnIntroStart = document.getElementById('btn-intro-start');
+        const btnIntroBack = document.getElementById('btn-intro-back');
+
+        btnIntroStart?.addEventListener('click', () => {
+            document.getElementById('level-intro-modal').style.display = 'none';
+            this.startLevel(this.selectedPendingLevel);
+        });
+
+        btnIntroBack?.addEventListener('click', () => {
+            document.getElementById('level-intro-modal').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
+        });
+    }
+
+    showLevelIntroScreen(levelIndex) {
+        this.selectedPendingLevel = levelIndex;
+        document.getElementById('main-menu').style.display = 'none';
+
+        const modal = document.getElementById('level-intro-modal');
+        const img = document.getElementById('level-intro-img');
+        const badge = document.getElementById('level-intro-badge');
+        const title = document.getElementById('level-intro-title');
+        const desc = document.getElementById('level-intro-desc');
+
+        const levelData = [
+            {
+                badge: 'NIVEL 1',
+                img: '/screens/level_1.png',
+                title: 'NIVEL 1: ESCAPE DE CUBÍCULOS',
+                desc: 'Evita a los infectados que estornudan activamente hacia ti. Esquiva el aerosol viral, recoge mascarillas N95 y desinfectante, y corre hacia la estación segura que cambia cada 45 segundos.'
+            },
+            {
+                badge: 'NIVEL 2',
+                img: '/screens/level_2.png',
+                title: 'NIVEL 2: CARRERA AL BUFFET',
+                desc: '¡Hay picadera y desayuno de cumpleaños en el lounge! Corre por los pasillos contra Fernan (que se cae), Alejandro (riéndose a carcajadas) y Hector para llegar primero a la mesa de snacks.'
+            },
+            {
+                badge: 'NIVEL 3',
+                img: '/screens/level_3.png',
+                title: 'NIVEL 3: HUYE HACIA LA SALIDA',
+                desc: '¡Alarma de emergencia activada! Tienes 8 segundos de ventaja para posicionarte. Agáchate detrás de los cubículos para protegerte de las flechas (4 flechazos te eliminan), rescata a tus compañeros y escapa por las escaleras.'
+            }
+        ];
+
+        const data = levelData[levelIndex] || levelData[0];
+        if (badge) badge.innerText = data.badge;
+        if (img) img.src = data.img;
+        if (title) title.innerText = data.title;
+        if (desc) desc.innerText = data.desc;
+
+        modal.style.display = 'flex';
+        sounds.init();
     }
 
     startLevel(index) {
@@ -115,20 +234,21 @@ export class Game {
         this.currentLevelIndex = index;
         this.currentLevel = this.levels[index];
 
-        // Hide Menu, Show Game HUD
+        // Hide Menu and Intro Modal, Show Game HUD
         document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('level-intro-modal').style.display = 'none';
         document.getElementById('game-hud').style.display = 'block';
 
         // Update Level Title Banner
         const titles = [
-            '🦠 Nivel 1: Brote de COVID-19 (Evita los Estornudos)',
-            '🏃 Nivel 2: La Gran Carrera al Lounge (Snacks & Cumpleaños)',
-            '🚨 Nivel 3: Evacuación de Emergencia (Plano Desalojo Piso 3)'
+            '🦠 Nivel 1: Escape de Cubículos (COVID-19)',
+            '🏃 Nivel 2: Carrera al Buffet (Breakroom)',
+            '🚨 Nivel 3: Huye hacia la Salida (Evacuación)'
         ];
         const objectives = [
-            'Navega los cubículos, recolecta mascarillas N95 y desinfectante, y llega a la Estación Segura.',
+            'Navega los cubículos, recolecta mascarillas N95 y llega a la Estación Segura (cambia cada 45s).',
             '¡Corre al lounge contra Fernan, Alejandro y Hector! Agarra café para turbo velocidad y llega primero al buffet.',
-            '¡Alarma activada! Agáchate detrás de los cubículos para no ser detectado, rescata a tus compañeros y sal por las escaleras.'
+            '¡Alarma activada! Tienes 8s de ventaja. Agáchate detrás de los cubículos, rescata a tus compañeros y sal por las escaleras.'
         ];
 
         document.getElementById('hud-level-title').innerText = titles[index];
@@ -144,61 +264,59 @@ export class Game {
     }
 
     nextLevel() {
-        const next = (this.currentLevelIndex + 1) % this.levels.length;
-        this.startLevel(next);
+        const nextIdx = (this.currentLevelIndex + 1) % this.levels.length;
+        this.hud.hideModal();
+        this.showLevelIntroScreen(nextIdx);
     }
 
     showMenu() {
         if (this.currentLevel) {
             this.currentLevel.cleanup();
         }
-        this.particles.clear();
+        document.getElementById('game-hud').style.display = 'none';
+        document.getElementById('level-intro-modal').style.display = 'none';
         this.hud.hideModal();
         document.getElementById('main-menu').style.display = 'flex';
-        document.getElementById('game-hud').style.display = 'none';
     }
 
     animate() {
         requestAnimationFrame(this.animate);
+
         const delta = Math.min(this.clock.getDelta(), 0.1);
 
-        if (this.currentLevel) {
-            // Update Player
+        // Update Player
+        if (this.player) {
             this.player.update(delta, this.floorPlan.colliders);
+        }
 
-            // Update Current Level logic
+        // Update Current Level
+        if (this.currentLevel && !this.currentLevel.isComplete && !this.currentLevel.isFailed) {
             this.currentLevel.update(delta, this.camera);
+        }
 
-            // Update Particles
-            this.particles.update(delta, this.camera);
+        // Update Particles
+        if (this.particles) {
+            this.particles.update(delta);
+        }
 
-            // Update HUD & Minimap
+        // Update HUD
+        if (this.hud && this.currentLevel && this.player) {
             this.hud.update(this.currentLevelIndex, this.currentLevel, this.player);
 
-            // Check Victory / Defeat triggers
+            // Check Win / Lose Conditions
             if (this.currentLevel.isComplete) {
-                if (this.currentLevelIndex === 0) {
-                    this.hud.showVictory('¡Sobreviviste al Brote!', 'Llegaste a la Estación Segura sin contagiarte.');
-                } else if (this.currentLevelIndex === 1) {
-                    const place = this.currentLevel.rank === 1 ? '🥇 1er Lugar' : (this.currentLevel.rank === 2 ? '🥈 2do Lugar' : '🥉 3er Lugar');
-                    this.hud.showVictory(`¡Llegaste al Lounge! (${place})`, `Tiempo: ${this.currentLevel.raceTime.toFixed(1)}s`);
-                } else if (this.currentLevelIndex === 2) {
-                    this.hud.showVictory('¡Evacuación Exitosa!', `Escapaste a salvo por la Escalera de Emergencia junto a ${this.currentLevel.rescuedColleagues} compañeros.`);
-                }
+                this.hud.showVictory(this.currentLevelIndex, this.currentLevel);
             } else if (this.currentLevel.isFailed) {
-                if (this.currentLevelIndex === 0) {
-                    this.hud.showDefeat('¡Te Contagiaste!', 'La carga viral llegó al 100%. Usa mascarillas y desinfectante para protegerte.');
-                } else if (this.currentLevelIndex === 2) {
-                    this.hud.showDefeat('¡Fuiste Detectado!', 'Agáchate [C] detrás de las paredes de los cubículos para pasar desapercibido.');
-                }
+                this.hud.showGameOver(this.currentLevelIndex, this.currentLevel);
             }
         }
 
+        // Render Scene
         this.renderer.render(this.scene, this.camera);
     }
 }
 
-// Start game when page loads
+// Instantiate Game on DOM load
 window.addEventListener('DOMContentLoaded', () => {
     window.game = new Game();
 });
