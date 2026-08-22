@@ -70,8 +70,32 @@ export class ActiveShooterLevel {
         this.hector.rescued = false;
         this.npcs.push(this.hector);
 
-        // 5. Draw Evacuation Route Visual Aids
+        // 5. Draw Evacuation Route Visual Aids & Glowing Exit Beacons
         this.createEvacuationArrows();
+        this.createExitBeacons();
+    }
+
+    createExitBeacons() {
+        this.exitBeacons = [];
+        this.floorPlan.exits.forEach(exit => {
+            const beaconGroup = new THREE.Group();
+
+            const ringGeo = new THREE.RingGeometry(1.2, 1.8, 32);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: 0x00ff88,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.8
+            });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.02;
+            beaconGroup.add(ring);
+
+            beaconGroup.position.copy(exit.pos);
+            this.scene.add(beaconGroup);
+            this.exitBeacons.push(beaconGroup);
+        });
     }
 
     spawnArrow(origin, direction) {
@@ -244,18 +268,18 @@ export class ActiveShooterLevel {
             npc.update(delta, camera);
         });
 
-        // 4. Check for Emergency Exit Stairwell Escapes (Must have rescued colleagues)
-        if (this.rescuedColleagues >= 1) {
-            for (const exit of this.floorPlan.exits) {
-                const dist = exit.pos.distanceTo(this.player.position);
-                if (dist < 2.0) {
-                    // ESCAPED TO SAFETY!
-                    this.isComplete = true;
-                    sounds.stopSiren();
-                    sounds.playVictory();
+        // 4. Check for Emergency Exit Stairwell Escapes (Reaching any exit stairwell wins the level!)
+        for (const exit of this.floorPlan.exits) {
+            const dist = exit.pos.distanceTo(this.player.position);
+            if (dist < 3.2) {
+                // ESCAPED TO SAFETY!
+                this.isComplete = true;
+                sounds.stopSiren();
+                sounds.playVictory();
+                if (this.particles) {
                     this.particles.createConfetti(this.player.position);
-                    break;
                 }
+                break;
             }
         }
 
@@ -276,5 +300,9 @@ export class ActiveShooterLevel {
         this.arrows = [];
         this.evacRouteArrows.forEach(arr => this.scene.remove(arr));
         this.evacRouteArrows = [];
+        if (this.exitBeacons) {
+            this.exitBeacons.forEach(b => this.scene.remove(b));
+            this.exitBeacons = [];
+        }
     }
 }
