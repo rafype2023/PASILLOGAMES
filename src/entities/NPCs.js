@@ -113,7 +113,7 @@ export class BaseNPC {
 // 1. Fernan: Always Falling! (El que siempre se cae)
 export class FernanNPC extends BaseNPC {
     constructor(scene, startPos, particles) {
-        super(scene, 'Fernan 😵', 0x2e6b9e, startPos); // Blue polo
+        super(scene, 'Fernan 😵', 0x2e6b9e, startPos, '/assets/fernan_face.png'); // Blue polo & real face
         this.particles = particles;
         this.fallCooldown = 2.0; // Trips after 2 seconds in Level 2!
         this.isDown = false;
