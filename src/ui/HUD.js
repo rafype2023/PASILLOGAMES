@@ -101,20 +101,28 @@ export class HUD {
 
             if (chaosLabel) chaosLabel.innerText = `CARRERA ACTIVA`;
             if (statusSub) statusSub.innerText = `TIEMPO: ${(currentLevel.raceTime || 0).toFixed(1)}s`;
-        } else if (levelIndex === 2) { // Active Shooter Evacuation
-            const risk = Math.round(currentLevel.detectionMeter || 0);
-            const safePct = 100 - risk;
-            if (healthBar) healthBar.style.width = `${safePct}%`;
-            if (healthLabel) healthLabel.innerText = player.isCrouching ? 'STEALTH (SAFE)' : 'DETECTION RISK';
-            if (healthVal) healthVal.innerText = `${risk}%`;
+        } else if (levelIndex === 2) { // Active Shooter Evacuation (Archer Threat)
+            const hp = Math.max(0, Math.round(player.health));
+            const stam = Math.max(0, Math.round(player.stamina));
+            if (healthBar) healthBar.style.width = `${hp}%`;
+            if (healthLabel) healthLabel.innerText = player.isCrouching ? 'HEALTH (AGACHADO / A COBIJO)' : 'HEALTH (VIDA)';
+            if (healthVal) healthVal.innerText = `${hp}%`;
 
-            if (staminaBar) staminaBar.style.width = `${Math.round(player.stamina)}%`;
+            if (staminaBar) staminaBar.style.width = `${stam}%`;
             if (staminaLabel) staminaLabel.innerText = 'STAMINA';
-            if (staminaVal) staminaVal.innerText = `${Math.round(player.stamina)}%`;
+            if (staminaVal) staminaVal.innerText = `${stam}%`;
 
-            if (chaosLabel) chaosLabel.innerText = `ALERT CHAOS ${risk}%`;
-            const rescued = currentLevel.rescuedColleagues || 0;
-            if (statusSub) statusSub.innerText = `COMPAÑEROS RESCATADOS: ${rescued}/3`;
+            const hits = currentLevel.hitsReceived || 0;
+            const headstart = Math.ceil(currentLevel.headstartTimer || 0);
+
+            if (headstart > 0) {
+                if (chaosLabel) chaosLabel.innerText = `⏳ VENTAJA: ${headstart}s`;
+                if (statusSub) statusSub.innerText = `¡TIENES ${headstart}s PARA MOVERTE Y BUSCAR COBIJO!`;
+            } else {
+                if (chaosLabel) chaosLabel.innerText = `FLECHAZOS: ${hits}/4`;
+                const rescued = currentLevel.rescuedColleagues || 0;
+                if (statusSub) statusSub.innerText = `COMPAÑEROS RESCATADOS: ${rescued}/3 | ESCALERAS DE EMERGENCIA`;
+            }
         }
 
         // Inventory slots update

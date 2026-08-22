@@ -317,70 +317,105 @@ export class SneezerNPC extends BaseNPC {
     }
 }
 
-// 5. Hostile / Active Threat
+// 5. Hostile Archer / Threat in Level 3 (Shoots arrows at Guillo!)
 export class HostileNPC extends BaseNPC {
     constructor(scene, startPos, waypoints) {
-        super(scene, '⚠️ HAZARD', 0x111111, startPos);
+        super(scene, '🏹 TIRADOR', 0x1f1414, startPos); // Dark uniform
         this.waypoints = waypoints;
         this.currentWpIndex = 0;
-        this.speed = 3.0;
+        this.speed = 3.2;
+        this.shootTimer = 1.5 + Math.random();
+        this.shootCooldown = 2.4; // Shoots every 2.4 seconds
+        this.detectionRange = 22.0;
 
-        // Flashlight cone
-        const spotGeo = new THREE.ConeGeometry(2.5, 9.0, 16);
-        const spotMat = new THREE.MeshBasicMaterial({
-            color: 0xff2222,
+        // Equip Bow in right hand
+        const bowGroup = new THREE.Group();
+        const bowCurveGeo = new THREE.TorusGeometry(0.28, 0.02, 8, 16, Math.PI);
+        const bowMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.6 });
+        const bowMesh = new THREE.Mesh(bowCurveGeo, bowMat);
+        bowMesh.rotation.z = Math.PI / 2;
+        bowGroup.add(bowMesh);
+
+        // Bowstring
+        const stringGeo = new THREE.CylinderGeometry(0.003, 0.003, 0.56);
+        const stringMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const stringMesh = new THREE.Mesh(stringGeo, stringMat);
+        stringMesh.position.x = 0;
+        bowGroup.add(stringMesh);
+
+        bowGroup.position.set(0.12, -0.15, 0.25);
+        bowGroup.rotation.y = -Math.PI / 4;
+        this.rightArm.add(bowGroup);
+
+        // Flashlight / Aim Warning Beam
+        const beamGeo = new THREE.ConeGeometry(0.8, 14.0, 16);
+        const beamMat = new THREE.MeshBasicMaterial({
+            color: 0xff1122,
             transparent: true,
-            opacity: 0.25,
+            opacity: 0.22,
             side: THREE.DoubleSide
         });
-        this.visionCone = new THREE.Mesh(spotGeo, spotMat);
-        this.visionCone.position.set(0, 1.2, 4.5);
-        this.visionCone.rotation.x = -Math.PI / 2;
-        this.mesh.add(this.visionCone);
+        this.aimBeam = new THREE.Mesh(beamGeo, beamMat);
+        this.aimBeam.position.set(0, 1.2, 7.0);
+        this.aimBeam.rotation.x = -Math.PI / 2;
+        this.mesh.add(this.aimBeam);
     }
 
-    checkLineOfSight(player) {
+    update(delta, camera, player, level) {
+        super.update(delta, camera);
+
+        if (!player || player.isDead) return;
+
         const dirToPlayer = player.position.clone().sub(this.position);
         dirToPlayer.y = 0;
         const dist = dirToPlayer.length();
 
-        if (dist > 10.0) return false;
+        // 1. Stalk / Pursue Guillo across the office
+        if (dist < this.detectionRange) {
+            this.mesh.rotation.y = Math.atan2(dirToPlayer.x, dirToPlayer.z);
 
-        const forward = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.mesh.rotation.y);
-        dirToPlayer.normalize();
-
-        const angle = forward.angleTo(dirToPlayer);
-        if (angle < Math.PI / 4) {
-            if (player.isCrouching && dist > 2.8) {
-                return false; // Hidden behind cubicle wall!
-            }
-            return true;
-        }
-        return false;
-    }
-
-    update(delta, camera, player) {
-        super.update(delta, camera);
-
-        if (this.waypoints.length > 0) {
-            const target = this.waypoints[this.currentWpIndex];
-            const dir = target.clone().sub(this.position);
-            dir.y = 0;
-            const dist = dir.length();
-            if (dist < 0.8) {
-                this.currentWpIndex = (this.currentWpIndex + 1) % this.waypoints.length;
-            } else {
-                dir.normalize();
-                this.position.addScaledVector(dir, this.speed * delta);
+            // Move closer if not in optimal shooting distance
+            if (dist > 4.5) {
+                dirToPlayer.normalize();
+                this.position.addScaledVector(dirToPlayer, this.speed * delta);
                 this.mesh.position.copy(this.position);
-                this.mesh.rotation.y = Math.atan2(dir.x, dir.z);
 
-                const swing = Math.sin(Date.now() * 0.01) * 0.5;
+                const swing = Math.sin(Date.now() * 0.012) * 0.45;
                 this.leftLeg.rotation.x = swing;
                 this.rightLeg.rotation.x = -swing;
                 this.leftArm.rotation.x = -swing;
-                this.rightArm.rotation.x = swing;
+            }
+
+            // 2. Aim and Shoot Arrow at Guillo
+            this.shootTimer -= delta;
+            if (this.shootTimer <= 0 && dist < 18.0) {
+                this.shootTimer = this.shootCooldown;
+                this.fireArrowAtPlayer(player, level);
+            }
+        } else if (this.waypoints && this.waypoints.length > 0) {
+            // Patrol waypoints if player is far
+            const wp = this.waypoints[this.currentWpIndex];
+            const wpDir = wp.clone().sub(this.position);
+            wpDir.y = 0;
+            if (wpDir.length() < 0.8) {
+                this.currentWpIndex = (this.currentWpIndex + 1) % this.waypoints.length;
+            } else {
+                wpDir.normalize();
+                this.position.addScaledVector(wpDir, this.speed * delta);
+                this.mesh.position.copy(this.position);
+                this.mesh.rotation.y = Math.atan2(wpDir.x, wpDir.z);
             }
         }
+    }
+
+    fireArrowAtPlayer(player, level) {
+        if (!level || !level.spawnArrow) return;
+        sounds.playArrowShot();
+
+        const spawnPos = this.position.clone().add(new THREE.Vector3(0, 1.2, 0));
+        const targetPos = player.position.clone().add(new THREE.Vector3(0, player.isCrouching ? 0.6 : 1.1, 0));
+        
+        const shootDir = targetPos.clone().sub(spawnPos).normalize();
+        level.spawnArrow(spawnPos, shootDir);
     }
 }
