@@ -1,0 +1,567 @@
+:root {
+    --bg-dark: #0e0d0b;
+    --hud-bg: rgba(22, 17, 13, 0.88);
+    --hud-border: rgba(184, 142, 75, 0.35);
+    --gold-text: #e6be6d;
+    --bar-health: #e8637c;
+    --bar-stamina: #54b5ea;
+    --text-light: #f4efe6;
+    --text-dim: #a89f91;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-dark);
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-light);
+}
+
+#game-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+/* Glassmorphism Menus */
+.glass-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(16, 13, 10, 0.86), rgba(8, 6, 5, 0.97));
+    backdrop-filter: blur(14px);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.glass-panel {
+    background: var(--hud-bg);
+    border: 1px solid var(--hud-border);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.menu-header {
+    text-align: center;
+    margin-bottom: 2.2rem;
+}
+
+.brand-tag {
+    display: inline-block;
+    background: rgba(184, 142, 75, 0.15);
+    border: 1px solid var(--gold-text);
+    color: var(--gold-text);
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    padding: 0.35rem 1rem;
+    border-radius: 20px;
+    margin-bottom: 0.75rem;
+}
+
+.menu-header h1 {
+    font-size: 3.2rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #ffffff 40%, #e6be6d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.menu-header .subtitle {
+    font-size: 1.1rem;
+    color: var(--text-dim);
+    margin-top: 0.5rem;
+}
+
+/* Level Grid */
+.level-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 1100px;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.level-card {
+    background: var(--hud-bg);
+    border: 1px solid var(--hud-border);
+    border-radius: 16px;
+    padding: 2rem 1.6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.level-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--gold-text);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+}
+
+.card-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+}
+
+.badge-green { background: rgba(0, 255, 136, 0.15); color: #00ff88; border: 1px solid #00ff88; }
+.badge-orange { background: rgba(255, 153, 0, 0.15); color: #ffaa00; border: 1px solid #ffaa00; }
+.badge-red { background: rgba(255, 51, 68, 0.15); color: #ff4455; border: 1px solid #ff4455; }
+
+.card-icon {
+    font-size: 3.2rem;
+    margin: 1.5rem 0 1rem 0;
+}
+
+.level-card h3 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+}
+
+.level-card p {
+    font-size: 0.92rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    flex-grow: 1;
+    margin-bottom: 1.5rem;
+}
+
+.btn-play {
+    width: 100%;
+    padding: 0.85rem;
+    border-radius: 10px;
+    border: 1px solid var(--hud-border);
+    background: #241d17;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.level-card:hover .btn-play {
+    background: linear-gradient(135deg, #a67c38, #d4a373);
+    color: #000000;
+    font-weight: 800;
+}
+
+/* Characters Bar */
+.characters-bar {
+    display: flex;
+    gap: 1.2rem;
+    margin-bottom: 1.8rem;
+}
+
+.char-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(30, 24, 18, 0.7);
+    border: 1px solid var(--hud-border);
+    padding: 0.5rem 1rem;
+    border-radius: 24px;
+}
+
+.char-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--gold-text);
+}
+
+.char-emoji { font-size: 1.6rem; }
+.char-pill strong { display: block; font-size: 0.9rem; font-weight: 700; }
+.char-pill span { font-size: 0.75rem; color: var(--text-dim); }
+
+.controls-guide {
+    display: flex;
+    gap: 1.2rem;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    background: rgba(0, 0, 0, 0.45);
+    padding: 0.75rem 1.5rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.controls-guide strong {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    margin-right: 0.3rem;
+}
+
+/* =========================================
+   IN-GAME HUD (MATT WOLFE REFERENCE STYLING)
+   ========================================= */
+#game-hud {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* 1. Top-Left Player Status Card */
+.hud-player-card {
+    position: absolute;
+    top: 1.2rem;
+    left: 1.2rem;
+    width: 260px;
+    background: var(--hud-bg);
+    border: 1px solid var(--hud-border);
+    border-radius: 14px;
+    padding: 1.0rem 1.2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    pointer-events: auto;
+}
+
+.player-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.8rem;
+}
+
+.level-title-gold {
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--gold-text);
+    letter-spacing: 0.08em;
+}
+
+.level-xp-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-dim);
+}
+
+.hud-stat-group {
+    margin-bottom: 0.6rem;
+}
+
+.stat-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 0.25rem;
+}
+
+.bar-track {
+    height: 9px;
+    background: #0d0a08;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bar-fill {
+    height: 100%;
+    transition: width 0.2s ease-out;
+}
+
+.bar-pink { background: linear-gradient(90deg, #e8637c, #ff8da1); }
+.bar-cyan { background: linear-gradient(90deg, #389cd4, #66c4ff); }
+
+/* Carrying Slots */
+.carrying-container {
+    margin-top: 0.8rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.carrying-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 0.35rem;
+}
+
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+}
+
+.slot-box {
+    height: 16px;
+    background: #1f1a15;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+}
+
+.slot-box.active-slot {
+    background: var(--gold-text);
+    border-color: #ffffff;
+}
+
+/* 2. Top-Center Chaos & Timer Banner */
+.hud-center-pill {
+    position: absolute;
+    top: 1.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--hud-bg);
+    border: 1px solid var(--hud-border);
+    border-radius: 24px;
+    padding: 0.4rem 2.2rem;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    pointer-events: auto;
+}
+
+.center-banner-header {
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: var(--gold-text);
+    margin-bottom: 0.15rem;
+}
+
+.center-banner-timer {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.1;
+}
+
+.center-banner-sub {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+}
+
+/* 3. Top-Right Radar & Actions */
+.hud-top-right {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.6rem;
+    pointer-events: auto;
+}
+
+.radar-card {
+    background: var(--hud-bg);
+    border: 1px solid var(--hud-border);
+    border-radius: 14px;
+    padding: 0.65rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.radar-top-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--gold-text);
+    margin-bottom: 0.4rem;
+}
+
+.radar-badge {
+    background: rgba(230, 190, 109, 0.2);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.6rem;
+}
+
+#minimap {
+    border-radius: 8px;
+    display: block;
+    background: #0a0806;
+}
+
+.radar-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    margin-top: 0.35rem;
+}
+
+.dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 3px;
+}
+.dot-white { background: #ffffff; }
+.dot-green { background: #00ff88; }
+.dot-red { background: #ff3344; }
+
+.hud-btn-stack {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.hud-btn {
+    background: var(--hud-bg);
+    border: 1px solid var(--hud-border);
+    color: var(--text-light);
+    padding: 0.45rem 0.85rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.hud-btn:hover {
+    border-color: var(--gold-text);
+    color: var(--gold-text);
+}
+
+/* Mission Toast */
+.hud-mission-toast {
+    position: absolute;
+    bottom: 3.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(22, 17, 13, 0.9);
+    border: 1px solid var(--hud-border);
+    padding: 0.6rem 1.6rem;
+    border-radius: 20px;
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    pointer-events: auto;
+}
+
+.toast-title {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--gold-text);
+}
+
+.toast-desc {
+    font-size: 0.82rem;
+    color: var(--text-light);
+}
+
+/* Bottom Bar */
+.hud-bottom-bar {
+    position: absolute;
+    bottom: 0.8rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.5rem;
+}
+
+.control-badge {
+    background: rgba(14, 11, 9, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+}
+
+/* Modal Game Over / Victory */
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+
+.modal-card {
+    max-width: 460px;
+    width: 100%;
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+
+.modal-card h2 {
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 0.75rem;
+}
+
+.modal-card p {
+    color: var(--text-dim);
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 1.2rem;
+}
+
+.modal-score {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--gold-text);
+    margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-primary {
+    padding: 0.8rem 1.6rem;
+    border-radius: 10px;
+    border: 1px solid var(--hud-border);
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    background: #241d17;
+    color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #a67c38, #d4a373);
+    color: #000000;
+    font-weight: 800;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}

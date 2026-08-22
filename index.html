@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FBPR Piso 3 - 3D Office Chronicles</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Cinzel:wght@700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <!-- MAIN MENU & LEVEL SELECTOR -->
+    <div id="main-menu" class="glass-overlay">
+        <div class="menu-header">
+            <div class="brand-tag">FIRSTBANK • PISO 3</div>
+            <h1>FBPR: OFFICE CHRONICLES</h1>
+            <p class="subtitle">Juego 3D en vista isométrica con Guillo, Fernan, Alejandro y Hector</p>
+        </div>
+
+        <div class="level-grid">
+            <!-- Level 1 Card -->
+            <div class="level-card" data-level="0">
+                <div class="card-badge badge-green">NIVEL 1</div>
+                <div class="card-icon">🦠</div>
+                <h3>Brote de COVID-19</h3>
+                <p>Alguien vino estornudando a los cubículos. ¡Esquiva las nubes de virus, recoge desinfectante y mascarillas N95 para llegar a salvo!</p>
+                <button class="btn-play">Jugar Nivel 1 ➜</button>
+            </div>
+
+            <!-- Level 2 Card -->
+            <div class="level-card" data-level="1">
+                <div class="card-badge badge-orange">NIVEL 2</div>
+                <div class="card-icon">🏃💨</div>
+                <h3>Carrera al Lounge</h3>
+                <p>¡Hay picadera de cumpleaños en el breakroom! Corre contra Fernan (que no para de caerse), Alejandro (riéndose) y Hector.</p>
+                <button class="btn-play">Jugar Nivel 2 ➜</button>
+            </div>
+
+            <!-- Level 3 Card -->
+            <div class="level-card" data-level="2">
+                <div class="card-badge badge-red">NIVEL 3</div>
+                <div class="card-icon">🚨</div>
+                <h3>Evacuación de Emergencia</h3>
+                <p>Alarma de desalojo activada. Agáchate detrás de los cubículos, sigue la ruta de escape del plano y llega a las escaleras de emergencia.</p>
+                <button class="btn-play">Jugar Nivel 3 ➜</button>
+            </div>
+        </div>
+
+        <div class="characters-bar">
+            <div class="char-pill">
+                <img src="/assets/guillo_face.png" class="char-avatar" alt="Guillo">
+                <div>
+                    <strong>Guillo</strong>
+                    <span>El Protagonista</span>
+                </div>
+            </div>
+            <div class="char-pill">
+                <span class="char-emoji">😵</span>
+                <div>
+                    <strong>Fernan</strong>
+                    <span>Siempre se cae</span>
+                </div>
+            </div>
+            <div class="char-pill">
+                <span class="char-emoji">😂</span>
+                <div>
+                    <strong>Alejandro</strong>
+                    <span>Siempre se ríe</span>
+                </div>
+            </div>
+            <div class="char-pill">
+                <span class="char-emoji">⚡</span>
+                <div>
+                    <strong>Hector</strong>
+                    <span>Velocista</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-guide">
+            <span><strong>W A S D</strong> Mover a Guillo</span>
+            <span><strong>SHIFT</strong> Sprint</span>
+            <span><strong>C</strong> Agacharse</span>
+            <span><strong>Q / E</strong> Girar Cámara</span>
+            <span><strong>RUEDA RATÓN</strong> Zoom</span>
+            <span><strong>V</strong> Alternar Isométrica / 3ra / 1ra Persona</span>
+        </div>
+    </div>
+
+    <!-- IN-GAME HUD (MATCHING MATT WOLFE REFERENCE AESTHETIC) -->
+    <div id="game-hud" style="display: none;">
+        <!-- Top-Left Player Status Panel (Reference Style) -->
+        <div class="hud-player-card">
+            <div class="player-header-row">
+                <span id="hud-level-tag" class="level-title-gold">LEVEL 1</span>
+                <span class="level-xp-text">FBPR PISO 3</span>
+            </div>
+
+            <!-- Health / Infection Bar -->
+            <div class="hud-stat-group">
+                <div class="stat-label-row">
+                    <span id="hud-health-label">HEALTH</span>
+                    <span id="hud-health-val">100%</span>
+                </div>
+                <div class="bar-track">
+                    <div id="hud-health-bar" class="bar-fill bar-pink" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- Stamina Bar -->
+            <div class="hud-stat-group">
+                <div class="stat-label-row">
+                    <span id="hud-stamina-label">STAMINA</span>
+                    <span id="hud-stamina-val">100%</span>
+                </div>
+                <div class="bar-track">
+                    <div id="hud-stamina-bar" class="bar-fill bar-cyan" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- Carrying / Inventory Slots (Reference Style) -->
+            <div class="carrying-container">
+                <div class="carrying-label">CARRYING <span id="carrying-count">0/8</span></div>
+                <div class="slot-grid">
+                    <div class="slot-box active-slot"></div>
+                    <div class="slot-box"></div>
+                    <div class="slot-box"></div>
+                    <div class="slot-box"></div>
+                    <div class="slot-box"></div>
+                    <div class="slot-box"></div>
+                    <div class="slot-box"></div>
+                    <div class="slot-box"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top-Center Mission & Chaos Banner -->
+        <div class="hud-center-pill">
+            <div class="center-banner-header">
+                <span id="hud-chaos-label">CHAOS 0%</span>
+            </div>
+            <div id="hud-timer-val" class="center-banner-timer">15:00</div>
+            <div id="hud-status-subtitle" class="center-banner-sub">OBJETIVO ACTIVO</div>
+        </div>
+
+        <!-- Top-Right Radar & Quick Actions -->
+        <div class="hud-top-right">
+            <div class="radar-card">
+                <div class="radar-top-row">
+                    <span class="radar-zone-name">PISO 3 DESALOJO</span>
+                    <span class="radar-badge">LIVE MAP</span>
+                </div>
+                <canvas id="minimap" width="180" height="130"></canvas>
+                <div class="radar-footer">
+                    <span><i class="dot dot-white"></i> Guillo</span>
+                    <span><i class="dot dot-green"></i> Estación Segura</span>
+                    <span><i class="dot dot-red"></i> Salida</span>
+                </div>
+            </div>
+
+            <div class="hud-btn-stack">
+                <button id="btn-cam" class="hud-btn">🎥 Vista: Isométrica</button>
+                <button id="btn-mute" class="hud-btn">🔊 Sonido</button>
+                <button id="btn-menu" class="hud-btn">🏠 Menú</button>
+            </div>
+        </div>
+
+        <!-- Floating Objective Toast -->
+        <div class="hud-mission-toast">
+            <span id="hud-level-title" class="toast-title">NIVEL</span>
+            <span id="hud-objective-text" class="toast-desc">Objetivo de la misión...</span>
+        </div>
+
+        <!-- Bottom Controls Indicator -->
+        <div class="hud-bottom-bar">
+            <div class="control-badge">[W,A,S,D] Moverse</div>
+            <div class="control-badge">[SHIFT] Sprint</div>
+            <div class="control-badge">[C] Agacharse</div>
+            <div class="control-badge">[Q/E] Rotar Cámara</div>
+            <div class="control-badge">[Rueda Ratón] Zoom</div>
+            <div class="control-badge">[V] Cambiar Cámara</div>
+        </div>
+    </div>
+
+    <!-- GAME OVER / VICTORY MODAL -->
+    <div id="modal-gameover" class="modal-overlay" style="display: none;">
+        <div class="modal-card glass-panel">
+            <h2 id="modal-title">¡Misión Cumplida!</h2>
+            <p id="modal-message">Has completado el objetivo con éxito.</p>
+            <div id="modal-score" class="modal-score"></div>
+            <div class="modal-actions">
+                <button id="btn-restart" class="btn-primary">🔄 Reintentar</button>
+                <button id="btn-next-level" class="btn-primary btn-success">Siguiente Nivel ➜</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
