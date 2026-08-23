@@ -558,6 +558,31 @@ export class OfficeProps {
         }
         return group;
     }
+
+    createWhiteboard(width = 3.0, height = 1.4) {
+        const group = new THREE.Group();
+        const frameMat = this.materials.get('cubicleTrim');
+        const boardMat = this.materials.get('whiteboard');
+
+        // Frame
+        const frameGeo = new THREE.BoxGeometry(width + 0.1, height + 0.1, 0.04);
+        const frame = new THREE.Mesh(frameGeo, frameMat);
+        group.add(frame);
+
+        // Whiteboard Face
+        const boardGeo = new THREE.PlaneGeometry(width, height);
+        const board = new THREE.Mesh(boardGeo, boardMat);
+        board.position.z = 0.025;
+        group.add(board);
+
+        // Marker tray
+        const trayGeo = new THREE.BoxGeometry(width * 0.7, 0.02, 0.08);
+        const tray = new THREE.Mesh(trayGeo, frameMat);
+        tray.position.set(0, -height / 2 - 0.01, 0.04);
+        group.add(tray);
+
+        return group;
+    }
 }
 
 export const officeProps = new OfficeProps();
