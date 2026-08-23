@@ -144,6 +144,41 @@ class OfficeMaterials {
             map: snacksTex,
             roughness: 0.6
         });
+
+        // Olive Green Lounge Armchairs (cub4.png, cub5.png)
+        this.materials.greenArmchair = new THREE.MeshStandardMaterial({
+            color: 0x5a7548,
+            roughness: 0.85,
+            metalness: 0.05
+        });
+
+        // Conference Table Wood
+        this.materials.confTableWood = new THREE.MeshStandardMaterial({
+            color: 0x422616,
+            roughness: 0.35,
+            metalness: 0.1
+        });
+
+        // Stainless Steel Elevators
+        this.materials.elevatorSteel = new THREE.MeshStandardMaterial({
+            color: 0xc4c9d0,
+            roughness: 0.2,
+            metalness: 0.85
+        });
+
+        // Filing Cabinets (cub1-5.png)
+        this.materials.filingCabinet = new THREE.MeshStandardMaterial({
+            color: 0xa4aab4,
+            roughness: 0.45,
+            metalness: 0.4
+        });
+
+        // Black Office Wastebaskets
+        this.materials.trashBin = new THREE.MeshStandardMaterial({
+            color: 0x202226,
+            roughness: 0.7,
+            metalness: 0.1
+        });
     }
 
     get(name) {

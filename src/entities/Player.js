@@ -25,13 +25,15 @@ export class Player {
         this.maxCarrying = 8;
         this.isDead = false;
 
-        // Isometric Top-Down Camera Settings (Matching Matt Wolfe Reference)
+        // Free 3D Orbit Camera (Mouse Drag / WASD)
         this.cameraMode = 'isometric'; // 'isometric', 'third', 'first'
-        this.isoHeight = 11.5;
-        this.isoDistance = 9.2;
+        this.isoDistance = 14.5;
         this.isoPitch = Math.PI / 3.4; // ~53 degrees tilt
-        this.isoYaw = 0; // Can rotate with Q/E
+        this.isoYaw = 0; // Rotates 360 deg via Mouse Drag or Q/E
         this.zoomLevel = 1.0;
+        this.isDraggingMouse = false;
+        this.previousMouseX = 0;
+        this.previousMouseY = 0;
 
         // Physics bounds
         this.radius = 0.35;
@@ -143,8 +145,43 @@ export class Player {
             this.keys[e.code] = false;
         });
 
+        // 3D Mouse Drag Orbit (Left Mouse Button Drag)
+        window.addEventListener('pointerdown', (e) => {
+            // Only drag on canvas / game area (button 0 = left click)
+            if (e.button === 0 && e.target && (e.target.tagName === 'CANVAS' || e.target.id === 'game-container')) {
+                this.isDraggingMouse = true;
+                this.previousMouseX = e.clientX;
+                this.previousMouseY = e.clientY;
+            }
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!this.isDraggingMouse) return;
+
+            const deltaX = e.clientX - this.previousMouseX;
+            const deltaY = e.clientY - this.previousMouseY;
+
+            // Horizontal Orbit (Yaw 360 degrees)
+            this.isoYaw -= deltaX * 0.007;
+
+            // Vertical Tilt (Pitch between 10 degrees and 85 degrees)
+            this.isoPitch = Math.max(0.18, Math.min(Math.PI / 2.1, this.isoPitch - deltaY * 0.005));
+
+            this.previousMouseX = e.clientX;
+            this.previousMouseY = e.clientY;
+        });
+
+        window.addEventListener('pointerup', () => {
+            this.isDraggingMouse = false;
+        });
+
+        window.addEventListener('pointercancel', () => {
+            this.isDraggingMouse = false;
+        });
+
+        // Mouse Wheel Zoom
         window.addEventListener('wheel', (e) => {
-            this.zoomLevel = Math.max(0.6, Math.min(1.8, this.zoomLevel + e.deltaY * 0.001));
+            this.zoomLevel = Math.max(0.45, Math.min(2.2, this.zoomLevel + e.deltaY * 0.001));
         }, { passive: true });
     }
 
@@ -311,16 +348,20 @@ export class Player {
 
     updateCamera(delta) {
         if (this.cameraMode === 'isometric') {
-            // Isometric Top-Down 3/4 Elevated Perspective (Matt Wolfe Reference)
-            const h = this.isoHeight * this.zoomLevel;
-            const d = this.isoDistance * this.zoomLevel;
+            // Free 3D Spherical Orbit Camera (Drag with Left Mouse Button / WASD)
+            const dist = this.isoDistance * this.zoomLevel;
+            const horizDist = dist * Math.cos(this.isoPitch);
+            const vertHeight = dist * Math.sin(this.isoPitch);
 
-            const camOffset = new THREE.Vector3(0, h, d);
-            camOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.isoYaw);
+            const camOffset = new THREE.Vector3(
+                horizDist * Math.sin(this.isoYaw),
+                vertHeight,
+                horizDist * Math.cos(this.isoYaw)
+            );
 
             const targetCamPos = this.position.clone().add(camOffset);
-            this.camera.position.lerp(targetCamPos, delta * 8);
-            this.camera.lookAt(this.position.x, this.position.y + 0.6, this.position.z);
+            this.camera.position.lerp(targetCamPos, delta * 12);
+            this.camera.lookAt(this.position.x, this.position.y + 0.7, this.position.z);
         } else if (this.cameraMode === 'third') {
             // Third Person Over-Shoulder
             const offset = new THREE.Vector3(0, 2.0, 3.8);

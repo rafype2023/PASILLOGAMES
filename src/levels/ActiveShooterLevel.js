@@ -38,35 +38,35 @@ export class ActiveShooterLevel {
         this.player.health = 100;
         this.player.stamina = 100;
 
-        // 3. Spawn Hostile Archer pursuing Guillo
+        // 3. Spawn Hostile Archers pursuing Guillo
         const patrolWp = [
-            new THREE.Vector3(0, 0, 4),
-            new THREE.Vector3(0, 0, 16),
-            new THREE.Vector3(-14, 0, 16),
-            new THREE.Vector3(-14, 0, 4)
+            new THREE.Vector3(0, 0, 2),
+            new THREE.Vector3(0, 0, 10),
+            new THREE.Vector3(-14, 0, 10),
+            new THREE.Vector3(-14, 0, 2)
         ];
-        const h1 = new HostileNPC(this.scene, new THREE.Vector3(0, 0, 6), patrolWp);
+        const h1 = new HostileNPC(this.scene, new THREE.Vector3(0, 0, 4), patrolWp);
         this.hostiles.push(h1);
 
         const patrolWp2 = [
-            new THREE.Vector3(12, 0, 0),
-            new THREE.Vector3(12, 0, 14),
-            new THREE.Vector3(20, 0, 14),
-            new THREE.Vector3(20, 0, 0)
+            new THREE.Vector3(18, 0, -6),
+            new THREE.Vector3(18, 0, 6),
+            new THREE.Vector3(26, 0, 6),
+            new THREE.Vector3(26, 0, -6)
         ];
-        const h2 = new HostileNPC(this.scene, new THREE.Vector3(14, 0, 8), patrolWp2);
+        const h2 = new HostileNPC(this.scene, new THREE.Vector3(18, 0, 0), patrolWp2);
         this.hostiles.push(h2);
 
         // 4. Spawn Colleagues to Rescue
-        this.fernan = new FernanNPC(this.scene, new THREE.Vector3(-4, 0, 12), this.particles);
+        this.fernan = new FernanNPC(this.scene, new THREE.Vector3(-14, 0, 4), this.particles);
         this.fernan.rescued = false;
         this.npcs.push(this.fernan);
 
-        this.alejandro = new AlejandroNPC(this.scene, new THREE.Vector3(-18, 0, 8), this.particles);
+        this.alejandro = new AlejandroNPC(this.scene, new THREE.Vector3(-28, 0, -8), this.particles);
         this.alejandro.rescued = false;
         this.npcs.push(this.alejandro);
 
-        this.hector = new HectorNPC(this.scene, new THREE.Vector3(2, 0, 14));
+        this.hector = new HectorNPC(this.scene, new THREE.Vector3(13, 0, 2));
         this.hector.rescued = false;
         this.npcs.push(this.hector);
 

@@ -369,6 +369,195 @@ export class OfficeProps {
 
         return group;
     }
+
+    createGreenArmchair() {
+        const group = new THREE.Group();
+        const mat = this.materials.get('greenArmchair');
+        const darkMat = this.materials.get('deskLegs');
+
+        // Seat Cushion
+        const seatGeo = new THREE.BoxGeometry(0.7, 0.22, 0.7);
+        const seat = new THREE.Mesh(seatGeo, mat);
+        seat.position.y = 0.38;
+        seat.castShadow = true;
+        group.add(seat);
+
+        // Backrest
+        const backGeo = new THREE.BoxGeometry(0.7, 0.65, 0.2);
+        const back = new THREE.Mesh(backGeo, mat);
+        back.position.set(0, 0.7, -0.28);
+        back.castShadow = true;
+        group.add(back);
+
+        // Left Armrest
+        const armGeo = new THREE.BoxGeometry(0.18, 0.42, 0.74);
+        const leftArm = new THREE.Mesh(armGeo, mat);
+        leftArm.position.set(-0.38, 0.52, 0);
+        leftArm.castShadow = true;
+        group.add(leftArm);
+
+        // Right Armrest
+        const rightArm = new THREE.Mesh(armGeo, mat);
+        rightArm.position.set(0.38, 0.52, 0);
+        rightArm.castShadow = true;
+        group.add(rightArm);
+
+        // 4 Legs
+        const legGeo = new THREE.CylinderGeometry(0.025, 0.02, 0.26);
+        const legPositions = [
+            [-0.32, 0.13, -0.3],
+            [0.32, 0.13, -0.3],
+            [-0.32, 0.13, 0.3],
+            [0.32, 0.13, 0.3]
+        ];
+        legPositions.forEach(p => {
+            const leg = new THREE.Mesh(legGeo, darkMat);
+            leg.position.set(p[0], p[1], p[2]);
+            group.add(leg);
+        });
+
+        return group;
+    }
+
+    createConferenceTable(width = 4.2, depth = 1.8, chairCount = 8) {
+        const group = new THREE.Group();
+        const tableMat = this.materials.get('confTableWood');
+        const legMat = this.materials.get('elevatorSteel');
+
+        // Large Oval Conference Tabletop
+        const topGeo = new THREE.BoxGeometry(width, 0.08, depth);
+        const topMesh = new THREE.Mesh(topGeo, tableMat);
+        topMesh.position.y = 0.76;
+        topMesh.castShadow = true;
+        group.add(topMesh);
+
+        // Cable trough in center
+        const troughGeo = new THREE.BoxGeometry(width * 0.4, 0.01, 0.15);
+        const trough = new THREE.Mesh(troughGeo, legMat);
+        trough.position.set(0, 0.805, 0);
+        group.add(trough);
+
+        // Heavy pedestal base columns
+        const colGeo = new THREE.CylinderGeometry(0.22, 0.32, 0.72, 16);
+        const col1 = new THREE.Mesh(colGeo, legMat);
+        col1.position.set(-width * 0.28, 0.36, 0);
+        group.add(col1);
+
+        const col2 = new THREE.Mesh(colGeo, legMat);
+        col2.position.set(width * 0.28, 0.36, 0);
+        group.add(col2);
+
+        // Surrounding Conference Chairs
+        const chairsPerSide = Math.floor((chairCount - 2) / 2);
+        for (let i = 0; i < chairsPerSide; i++) {
+            const x = -width * 0.35 + (i / Math.max(1, chairsPerSide - 1)) * (width * 0.7);
+
+            // North side
+            const chairN = this.createOfficeChair();
+            chairN.position.set(x, 0, -depth / 2 - 0.35);
+            chairN.rotation.y = 0;
+            group.add(chairN);
+
+            // South side
+            const chairS = this.createOfficeChair();
+            chairS.position.set(x, 0, depth / 2 + 0.35);
+            chairS.rotation.y = Math.PI;
+            group.add(chairS);
+        }
+
+        // End Head Chairs
+        const chairW = this.createOfficeChair();
+        chairW.position.set(-width / 2 - 0.4, 0, 0);
+        chairW.rotation.y = Math.PI / 2;
+        group.add(chairW);
+
+        const chairE = this.createOfficeChair();
+        chairE.position.set(width / 2 + 0.4, 0, 0);
+        chairE.rotation.y = -Math.PI / 2;
+        group.add(chairE);
+
+        return group;
+    }
+
+    createRoundMeetingTable(radius = 1.0, chairCount = 4) {
+        const group = new THREE.Group();
+        const topGeo = new THREE.CylinderGeometry(radius, radius, 0.06, 24);
+        const top = new THREE.Mesh(topGeo, this.materials.get('deskTop'));
+        top.position.y = 0.75;
+        top.castShadow = true;
+        group.add(top);
+
+        const legGeo = new THREE.CylinderGeometry(0.08, 0.25, 0.72, 16);
+        const leg = new THREE.Mesh(legGeo, this.materials.get('elevatorSteel'));
+        leg.position.y = 0.36;
+        group.add(leg);
+
+        for (let i = 0; i < chairCount; i++) {
+            const angle = (i / chairCount) * Math.PI * 2;
+            const chair = this.createOfficeChair();
+            chair.position.set(Math.cos(angle) * (radius + 0.4), 0, Math.sin(angle) * (radius + 0.4));
+            chair.rotation.y = -angle - Math.PI / 2;
+            group.add(chair);
+        }
+
+        return group;
+    }
+
+    createElevatorBank() {
+        const group = new THREE.Group();
+        const steelMat = this.materials.get('elevatorSteel');
+        const trimMat = this.materials.get('cubicleTrim');
+
+        // 3 Elevator Doors
+        for (let i = 0; i < 3; i++) {
+            const z = (i - 1) * 3.2;
+
+            // Frame
+            const frameGeo = new THREE.BoxGeometry(0.15, 2.6, 2.0);
+            const frame = new THREE.Mesh(frameGeo, trimMat);
+            frame.position.set(0, 1.3, z);
+            group.add(frame);
+
+            // Left & Right Sliding Doors
+            const doorGeo = new THREE.BoxGeometry(0.06, 2.4, 0.88);
+            const leftDoor = new THREE.Mesh(doorGeo, steelMat);
+            leftDoor.position.set(0.05, 1.2, z - 0.46);
+            group.add(leftDoor);
+
+            const rightDoor = new THREE.Mesh(doorGeo, steelMat);
+            rightDoor.position.set(0.05, 1.2, z + 0.46);
+            group.add(rightDoor);
+
+            // Floor indicator screen (Level 3)
+            const indGeo = new THREE.BoxGeometry(0.08, 0.2, 0.35);
+            const indMat = new THREE.MeshStandardMaterial({ color: 0x00ff88, emissive: 0x00cc66, emissiveIntensity: 0.8 });
+            const ind = new THREE.Mesh(indGeo, indMat);
+            ind.position.set(0.1, 2.45, z);
+            group.add(ind);
+        }
+
+        return group;
+    }
+
+    createFilingCabinet() {
+        const group = new THREE.Group();
+        const mat = this.materials.get('filingCabinet');
+        const bodyGeo = new THREE.BoxGeometry(0.48, 0.72, 0.58);
+        const body = new THREE.Mesh(bodyGeo, mat);
+        body.position.y = 0.36;
+        body.castShadow = true;
+        group.add(body);
+
+        // Drawer handles
+        const handleGeo = new THREE.BoxGeometry(0.03, 0.04, 0.18);
+        const handleMat = this.materials.get('deskLegs');
+        for (let y of [0.22, 0.52]) {
+            const h = new THREE.Mesh(handleGeo, handleMat);
+            h.position.set(0.25, y, 0);
+            group.add(h);
+        }
+        return group;
+    }
 }
 
 export const officeProps = new OfficeProps();

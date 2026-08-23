@@ -35,20 +35,20 @@ export class LoungeRaceLevel {
         this.leaderboard = [];
 
         // 1. Spawn player at Start line in West wing corridor
-        const startLine = new THREE.Vector3(-24, 0, 0);
+        const startLine = new THREE.Vector3(-32, 0, 0);
         this.player.spawn(startLine);
         this.player.stamina = 100;
 
         // 2. Spawn Racer NPCs side-by-side with balanced competitive speeds
-        this.fernan = new FernanNPC(this.scene, new THREE.Vector3(-24, 0, 3), this.particles);
+        this.fernan = new FernanNPC(this.scene, new THREE.Vector3(-32, 0, 2.5), this.particles);
         this.fernan.speed = 3.8; // Fernan falls periodically
         this.npcs.push(this.fernan);
 
-        this.alejandro = new AlejandroNPC(this.scene, new THREE.Vector3(-24, 0, -3), this.particles);
+        this.alejandro = new AlejandroNPC(this.scene, new THREE.Vector3(-32, 0, -2.5), this.particles);
         this.alejandro.speed = 4.2; // Alejandro laughs
         this.npcs.push(this.alejandro);
 
-        this.hector = new HectorNPC(this.scene, new THREE.Vector3(-24, 0, -6));
+        this.hector = new HectorNPC(this.scene, new THREE.Vector3(-32, 0, -5.0));
         this.hector.speed = 4.6; // Hector is fast
         this.npcs.push(this.hector);
 
