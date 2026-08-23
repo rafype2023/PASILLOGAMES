@@ -108,11 +108,8 @@ export class Game {
 
         const endIntro = () => {
             video.pause();
-            videoOverlay.style.opacity = '0';
-            setTimeout(() => {
-                videoOverlay.style.display = 'none';
-                document.getElementById('main-menu').style.display = 'flex';
-            }, 400);
+            videoOverlay.style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
         };
 
         const playVideo = () => {
