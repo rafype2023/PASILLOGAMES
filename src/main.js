@@ -107,24 +107,34 @@ export class Game {
         if (!videoOverlay || !video) return;
 
         const endIntro = () => {
-            video.pause();
+            try { video.pause(); } catch (e) {}
             videoOverlay.style.display = 'none';
             document.getElementById('main-menu').style.display = 'flex';
         };
 
         const playVideo = () => {
             sounds.init();
+            video.muted = true;
             video.play().then(() => {
                 if (videoPrompt) videoPrompt.style.display = 'none';
-            }).catch(() => {
-                // Autoplay blocked, wait for user click
+            }).catch((err) => {
+                console.warn('Autoplay error:', err);
                 if (videoPrompt) videoPrompt.style.display = 'block';
             });
         };
 
+        video.onerror = () => {
+            console.warn('Video load error - skipping directly to main menu');
+            endIntro();
+        };
+
         videoOverlay.addEventListener('click', (e) => {
             if (e.target !== btnSkip && e.target !== btnAudio) {
-                playVideo();
+                if (video.paused) {
+                    playVideo();
+                } else {
+                    endIntro();
+                }
             }
         });
 
@@ -148,10 +158,10 @@ export class Game {
             video.currentTime = 0;
             video.muted = false;
             if (btnAudio) btnAudio.innerText = '🔊 Audio Activado';
-            video.play();
+            video.play().catch(() => {});
         });
 
-        // Initial attempt to play
+        // Trigger autoplay
         playVideo();
     }
 
