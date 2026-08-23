@@ -230,6 +230,10 @@ export class OfficeProps {
         return group;
     }
 
+    createSnacksTable() {
+        return this.createSnacksBuffet();
+    }
+
     createSnacksBuffet() {
         const group = new THREE.Group();
 
