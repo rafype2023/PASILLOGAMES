@@ -124,6 +124,11 @@ export class Game {
 
         video.addEventListener('ended', closeVideo);
 
+        video.onerror = () => {
+            console.warn('Video failed to load - closing overlay');
+            closeVideo();
+        };
+
         btnWatchIntro?.addEventListener('click', () => {
             document.getElementById('main-menu').style.display = 'none';
             videoOverlay.style.display = 'flex';
@@ -133,18 +138,25 @@ export class Game {
             sounds.init();
             video.play().catch(err => {
                 console.warn('Video playback notice:', err);
-                // Fallback muted if browser policy requires it
                 video.muted = true;
                 if (btnAudio) btnAudio.innerText = '🔇 Activar Audio';
                 video.play().catch(() => {});
             });
+        });
+
+        // Autoplay on startup with muted fallback for browser policy
+        video.muted = true;
+        sounds.init();
+        video.play().catch(err => {
+            console.warn('Autoplay notice:', err);
         });
     }
 
     initUI() {
         // Level selection cards -> Opens Level Intro Screen Briefing Modal
         document.querySelectorAll('.level-card').forEach(card => {
-            card.addEventListener('click', () => {
+            card.addEventListener('click', (e) => {
+                e.preventDefault();
                 const lvl = parseInt(card.getAttribute('data-level'), 10);
                 this.showLevelIntroScreen(lvl);
             });
@@ -154,12 +166,14 @@ export class Game {
         const btnIntroStart = document.getElementById('btn-intro-start');
         const btnIntroBack = document.getElementById('btn-intro-back');
 
-        btnIntroStart?.addEventListener('click', () => {
+        btnIntroStart?.addEventListener('click', (e) => {
+            e.preventDefault();
             document.getElementById('level-intro-modal').style.display = 'none';
             this.startLevel(this.selectedPendingLevel);
         });
 
-        btnIntroBack?.addEventListener('click', () => {
+        btnIntroBack?.addEventListener('click', (e) => {
+            e.preventDefault();
             document.getElementById('level-intro-modal').style.display = 'none';
             document.getElementById('main-menu').style.display = 'flex';
         });
@@ -305,7 +319,15 @@ export class Game {
     }
 }
 
-// Instantiate Game on DOM load
-window.addEventListener('DOMContentLoaded', () => {
-    window.game = new Game();
-});
+// Instantiate Game reliably
+function startApp() {
+    if (!window.game) {
+        window.game = new Game();
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startApp);
+} else {
+    startApp();
+}

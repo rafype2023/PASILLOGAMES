@@ -13,14 +13,14 @@
     <div id="game-container"></div>
 
     <!-- INTRO VIDEO SCREEN (COMPANY LOGO INTRO) -->
-    <div id="intro-video-overlay" class="video-overlay" style="display: none;">
-        <video id="intro-video" src="/screens/Intro.mp4" playsinline preload="auto"></video>
+    <div id="intro-video-overlay" class="video-overlay">
+        <video id="intro-video" src="/screens/Intro.mp4" autoplay muted playsinline preload="auto"></video>
         <div class="video-controls-bar">
-            <button id="btn-video-audio" class="video-hud-btn">🔊 Activar Audio</button>
-            <button id="btn-skip-intro" class="video-hud-btn btn-skip">Cerrar Video ✖</button>
+            <button id="btn-video-audio" class="video-hud-btn">🔇 Activar Audio</button>
+            <button id="btn-skip-intro" class="video-hud-btn btn-skip">Saltar Intro ⏩</button>
         </div>
         <div class="video-click-prompt" id="video-prompt" style="display: none;">
-            <span>▶️ Haz clic para reproducir el video intro</span>
+            <span>▶️ Haz clic para reproducir el video intro con sonido</span>
         </div>
     </div>
 
@@ -43,7 +43,7 @@
     </div>
 
     <!-- MAIN MENU & LEVEL SELECTOR -->
-    <div id="main-menu" class="glass-overlay">
+    <div id="main-menu" class="glass-overlay" style="display: none;">
         <div class="menu-header">
             <div class="header-top-row">
                 <div class="brand-tag">FIRSTBANK • PISO 3</div>
