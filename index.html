@@ -12,15 +12,39 @@
 <body>
     <div id="game-container"></div>
 
+    <script>
+        window.skipIntroVideo = function() {
+            var overlay = document.getElementById('intro-video-overlay');
+            var menu = document.getElementById('main-menu');
+            var video = document.getElementById('intro-video');
+            if (video) { try { video.pause(); } catch(e){} }
+            if (overlay) { overlay.style.display = 'none'; }
+            if (menu) { menu.style.display = 'flex'; }
+        };
+        window.toggleVideoAudio = function() {
+            var video = document.getElementById('intro-video');
+            var btn = document.getElementById('btn-video-audio');
+            if (video) {
+                video.muted = !video.muted;
+                if (btn) btn.innerText = video.muted ? '🔇 Activar Audio' : '🔊 Audio Activado';
+            }
+        };
+        window.openLevel = function(lvl) {
+            if (window.game) {
+                window.game.showLevelIntroScreen(lvl);
+            }
+        };
+    </script>
+
     <!-- INTRO VIDEO SCREEN (COMPANY LOGO INTRO) -->
-    <div id="intro-video-overlay" class="video-overlay">
-        <video id="intro-video" src="/screens/Intro.mp4" autoplay muted playsinline preload="auto"></video>
+    <div id="intro-video-overlay" class="video-overlay" onclick="window.skipIntroVideo()">
+        <video id="intro-video" src="/screens/Intro.mp4" autoplay muted playsinline preload="auto" onended="window.skipIntroVideo()"></video>
         <div class="video-controls-bar">
-            <button id="btn-video-audio" class="video-hud-btn">🔇 Activar Audio</button>
-            <button id="btn-skip-intro" class="video-hud-btn btn-skip">Saltar Intro ⏩</button>
+            <button id="btn-video-audio" class="video-hud-btn" onclick="event.stopPropagation(); window.toggleVideoAudio();">🔇 Activar Audio</button>
+            <button id="btn-skip-intro" class="video-hud-btn btn-skip" onclick="event.stopPropagation(); window.skipIntroVideo();">Saltar Intro ⏩</button>
         </div>
         <div class="video-click-prompt" id="video-prompt" style="display: none;">
-            <span>▶️ Haz clic para reproducir el video intro con sonido</span>
+            <span>▶️ Haz clic para saltar al Menú</span>
         </div>
     </div>
 
@@ -35,8 +59,8 @@
                 <h2 id="level-intro-title">NIVEL 1: ESCAPE DE CUBÍCULOS</h2>
                 <p id="level-intro-desc">Evita a los infectados que estornudan. Corre hacia la zona segura antes de contagiarte.</p>
                 <div class="level-intro-actions">
-                    <button id="btn-intro-back" class="btn-primary">↩️ Menú</button>
-                    <button id="btn-intro-start" class="btn-primary btn-success btn-glow">¡COMENZAR MISIÓN! 🚀</button>
+                    <button id="btn-intro-back" class="btn-primary" onclick="document.getElementById('level-intro-modal').style.display='none'; document.getElementById('main-menu').style.display='flex';">↩️ Menú</button>
+                    <button id="btn-intro-start" class="btn-primary btn-success btn-glow" onclick="if(window.game) window.game.startLevel(window.game.selectedPendingLevel);">¡COMENZAR MISIÓN! 🚀</button>
                 </div>
             </div>
         </div>
@@ -55,36 +79,36 @@
 
         <div class="level-grid">
             <!-- Level 1 Card -->
-            <div class="level-card" data-level="0">
+            <div class="level-card" data-level="0" onclick="window.openLevel(0)">
                 <div class="card-thumb-wrap">
                     <img src="/screens/level_1.png" class="card-thumb-img" alt="Nivel 1">
                     <div class="card-badge badge-green">NIVEL 1</div>
                 </div>
                 <h3>Brote de COVID-19</h3>
                 <p>Alguien vino estornudando a los cubículos. ¡Esquiva las nubes de virus, recoge desinfectante y mascarillas N95 para llegar a la zona segura!</p>
-                <button class="btn-play">Ver Misión e Iniciar ➜</button>
+                <button class="btn-play" onclick="event.stopPropagation(); window.openLevel(0);">Ver Misión e Iniciar ➜</button>
             </div>
 
             <!-- Level 2 Card -->
-            <div class="level-card" data-level="1">
+            <div class="level-card" data-level="1" onclick="window.openLevel(1)">
                 <div class="card-thumb-wrap">
                     <img src="/screens/level_2.png" class="card-thumb-img" alt="Nivel 2">
                     <div class="card-badge badge-orange">NIVEL 2</div>
                 </div>
                 <h3>Carrera al Lounge</h3>
                 <p>¡Hay picadera de cumpleaños en el breakroom! Corre contra Fernan (que no para de caerse), Alejandro (riéndose) y Hector para llegar primero al buffet.</p>
-                <button class="btn-play">Ver Misión e Iniciar ➜</button>
+                <button class="btn-play" onclick="event.stopPropagation(); window.openLevel(1);">Ver Misión e Iniciar ➜</button>
             </div>
 
             <!-- Level 3 Card -->
-            <div class="level-card" data-level="2">
+            <div class="level-card" data-level="2" onclick="window.openLevel(2)">
                 <div class="card-thumb-wrap">
                     <img src="/screens/level_3.png" class="card-thumb-img" alt="Nivel 3">
                     <div class="card-badge badge-red">NIVEL 3</div>
                 </div>
                 <h3>Huye hacia la Salida</h3>
                 <p>¡Alarma de emergencia! Tienes 8s de ventaja. Agáchate detrás de los cubículos para cubrirte de los flechazos, rescata a tus compañeros y escapa por las escaleras.</p>
-                <button class="btn-play">Ver Misión e Iniciar ➜</button>
+                <button class="btn-play" onclick="event.stopPropagation(); window.openLevel(2);">Ver Misión e Iniciar ➜</button>
             </div>
         </div>
 
