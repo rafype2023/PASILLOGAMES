@@ -102,45 +102,18 @@ export class Game {
         const btnSkip = document.getElementById('btn-skip-intro');
         const btnAudio = document.getElementById('btn-video-audio');
         const btnWatchIntro = document.getElementById('btn-watch-intro');
-        const videoPrompt = document.getElementById('video-prompt');
 
         if (!videoOverlay || !video) return;
 
-        const endIntro = () => {
+        const closeVideo = () => {
             try { video.pause(); } catch (e) {}
             videoOverlay.style.display = 'none';
             document.getElementById('main-menu').style.display = 'flex';
         };
 
-        const playVideo = () => {
-            sounds.init();
-            video.muted = true;
-            video.play().then(() => {
-                if (videoPrompt) videoPrompt.style.display = 'none';
-            }).catch((err) => {
-                console.warn('Autoplay error:', err);
-                if (videoPrompt) videoPrompt.style.display = 'block';
-            });
-        };
-
-        video.onerror = () => {
-            console.warn('Video load error - skipping directly to main menu');
-            endIntro();
-        };
-
-        videoOverlay.addEventListener('click', (e) => {
-            if (e.target !== btnSkip && e.target !== btnAudio) {
-                if (video.paused) {
-                    playVideo();
-                } else {
-                    endIntro();
-                }
-            }
-        });
-
         btnSkip?.addEventListener('click', (e) => {
             e.stopPropagation();
-            endIntro();
+            closeVideo();
         });
 
         btnAudio?.addEventListener('click', (e) => {
@@ -149,20 +122,23 @@ export class Game {
             btnAudio.innerText = video.muted ? '🔇 Activar Audio' : '🔊 Audio Activado';
         });
 
-        video.addEventListener('ended', endIntro);
+        video.addEventListener('ended', closeVideo);
 
         btnWatchIntro?.addEventListener('click', () => {
             document.getElementById('main-menu').style.display = 'none';
             videoOverlay.style.display = 'flex';
-            videoOverlay.style.opacity = '1';
             video.currentTime = 0;
             video.muted = false;
             if (btnAudio) btnAudio.innerText = '🔊 Audio Activado';
-            video.play().catch(() => {});
+            sounds.init();
+            video.play().catch(err => {
+                console.warn('Video playback notice:', err);
+                // Fallback muted if browser policy requires it
+                video.muted = true;
+                if (btnAudio) btnAudio.innerText = '🔇 Activar Audio';
+                video.play().catch(() => {});
+            });
         });
-
-        // Trigger autoplay
-        playVideo();
     }
 
     initUI() {
